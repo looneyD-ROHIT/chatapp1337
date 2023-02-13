@@ -2,7 +2,7 @@
 Currently under construction
 
 ### Development site
-[https://fileupload1337.azurewebsites.net](https://fileupload1337.azurewebsites.net)
+[http://chatapp1337dev.azurewebsites.net](http://chatapp1337dev.azurewebsites.net)
 
 <!-- This repository is a file upload web app where users can upload files and view/download them only and admins having privileges to view/download as well as delete others files.
 
