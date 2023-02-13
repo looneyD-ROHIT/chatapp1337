@@ -28,8 +28,8 @@
       justify-content: center;
       align-items: center;
       max-width: 500px;
-      height: 50vh;
-      margin: 10vh auto 0 auto;
+      height: 600px;
+      margin: 40px auto 0 auto;
   }
   .container h1 {
       text-align: center;
@@ -38,7 +38,7 @@
   }
   form {
       width: 33vw;
-      height: 50vh;
+      height: 450px;
       background-color: rgb(229, 235, 235);
       padding: 30px;
       border: 2px solid rgb(35, 61, 62);
@@ -98,6 +98,8 @@
   <div class="container">
     <h1>Please REGISTER</h1>
     <form action="" method="">
+        <label for="name">Enter your name</label>
+        <input type="name" name="name" id="name">
         <label for="username">Enter username</label>
         <input type="username" name="username" id="username">
         <label for="password">Enter password</label>
@@ -118,8 +120,9 @@
     submit.addEventListener('click', async (e)=>{
       e.preventDefault();
 
-      const username = document.getElementById('username').value
-      const password = document.getElementById('password').value
+      const name = document.getElementById('name').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
       const admin = document.getElementById('admin').checked == true;
       // console.log(username)
       // console.log(password)
@@ -130,6 +133,7 @@
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
+            name,
 						username,
 						password,
             admin

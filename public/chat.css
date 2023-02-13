@@ -60,14 +60,24 @@ textarea {
 .incoming {
     /* background: #8F8BE8; */
     background: rgb(98, 156, 244);
+    min-width: 150px;
     color: #fff;  
 }
 .outgoing {
     /* background: #e9eafd; */
+    min-width: 150px;
+    max-width: 45vw;
     background: #c1d2eb;
     color: #60616b;
     margin-left: auto;
 }
+
+.outgoing p{
+    min-height: 20px;
+    word-break: break-all;
+}
+
+
 .message h4 {
     position: absolute;
     top: -20px;
@@ -112,7 +122,16 @@ section.connections__section{
     color: rgb(228, 228, 239);
     cursor: pointer;
     transition: all 1s;
+    
+}
 
+/* selecting a user from a list of users */
+li[active]{
+    background: rgb(142, 197, 235);
+    /* background: linear-gradient(0.25turn, #ddb76b, #eff0ee, #87d570); */
+    /* color: rgb(82, 132, 62); */
+    color: #06f;
+    border: 4px solid green;
 }
 
 .extended{
@@ -172,8 +191,119 @@ section.connections__section{
   fill: #06f;
 }
 
+
+
+
+.modal{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: all 200ms ease-in;
+    border: 1px solid rgb(35, 61, 62);
+    border-radius: 10px;
+    z-index: 100;
+    width: 35vw;
+    height: 10vh;
+    max-width: 80%;
+    /* background-color: rgb(205, 234, 236); */
+    background-color: #95bbf3;
+}
+
+.modal.active{
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-header{
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgb(35, 61, 62);
+}
+
+.modal-header .title{
+    font-size: 2rem;
+    font-weight: bold;
+    color: rgb(35, 61, 62);
+}
+
+.modal-header .close-button{
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+    font-size: 2rem;
+    font-weight: bold;
+    color: rgb(35, 61, 62);
+}
+
+.modal-body{
+    padding: 15px 15px 0 15px;
+    font-size: 1.25rem;
+    height: 20vh;
+    /* background-color: rgb(205, 234, 236); */
+    background-color: #b6cef3;
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+form label {
+    font-weight: 900;
+    display: block;
+    margin-bottom: 10px;
+}
+form input {
+    padding: 12px 20px;
+    width: 80%;
+    background: #ebedf1;
+    border: 1px solid #ccc;
+}
+
+form button{
+    font-weight: 900;
+    font-size: 20px;
+    margin: 10px 0;
+    padding: 10px 5px;
+    width: 100px;
+    background: #4d8ff2;
+    border: 2px solid #72a6f3;
+}
+
+form button:hover{
+    color: antiquewhite;
+    cursor: pointer;
+    background: #85aeed;
+    transition: all 0.5s;
+}
+
+.overlay{
+    position: fixed;
+    opacity: 0;
+    transition: 200ms ease-in-out;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+}
+
+.overlay.active{
+    opacity: 1;
+    pointer-events: all;
+}
+
+
 @media (min-width: 768px) {
   .button-58 {
     min-width: 60px;
   }
 }
+
+

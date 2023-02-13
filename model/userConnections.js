@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 
 const connectionData = new mongoose.Schema({
+	connectionname: { type: String, required: true },	
     connectionid: { type: String, required: true, unique: true },
     isroom: { type: Boolean, required: true },
 })

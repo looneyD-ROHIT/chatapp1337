@@ -63,9 +63,10 @@ mongoose.connect(MONGO_URL, {
 
 // importing the models/schemas
 import User from './model/userModel.js';
-import Rooms from './model/roomModel.js';
+import RoomMessages from './model/roomMessages.js';
 import UserConnections from './model/userConnections.js';
-import UserMessages from './model/userMessages.js';
+import Rooms from './model/rooms.js';
+// import UserMessages from './model/userMessages.js';
 
 
 
@@ -96,7 +97,7 @@ passport.use(new LocalStrategy(
 
 passport.serializeUser(function(user, passportCB) {
     process.nextTick(function() {
-        passportCB(null, { id: user.id, username: user.username });
+        passportCB(null, { id: user.id, name: user.name, username: user.username });
     });
 });
 
@@ -108,9 +109,7 @@ passport.deserializeUser(function(user, passportCB) {
 
 
 
-/**
- * -------------- SESSION SETUP ----------------
- */
+// -------------- SESSION SETUP ----------------
 app.use(session({
     secret: 'good boy chatting now',
     resave: false,
@@ -186,10 +185,12 @@ app.post('/register', (req, res, next) => {
     const salt = crypto.randomBytes(32).toString('hex');
     const hash = crypto.pbkdf2Sync(req.body.password, salt, 10000, 64, 'sha512').toString('hex');
 
+    console.log(req.body.name)
     const newUser = new User({
-        username: req.body.username,
-        password: hash,
-        salt: salt,
+        name: `${req.body.name}`,
+        username: `${req.body.username}`,
+        password: `${hash}`,
+        salt: `${salt}`,
         admin: req.body.admin
     });
 
@@ -215,12 +216,175 @@ app.post('/register', (req, res, next) => {
 
 app.get('/chat', (req, res, next)=>{
     if(req.isAuthenticated()){
-        res.render('chat', {username: req.user.username});
+        // console.log(req.user);
+        UserConnections.findOne({ username: req.user.username })
+            .then(response => {
+                return res.render('chat', {name: req.user.name, username: req.user.username, connectionList: response ? response.connectionList : []})
+            })
+            .catch(err => {
+                console.log(err);
+                return res.render('chat', {name: req.user.name, username: req.user.username, connectionList: []});
+            })
     }
     else{
         res.redirect('/');
     }
 })
+
+app.post('/adduser', (req, res, next)=>{
+    if(req.isAuthenticated()){
+        User.findOne({username: req.body.username})
+            .then(getUser => {
+                // user trying to add himself
+                if(req.user.username == getUser.username){
+                    return res.json({status: 'fail', msg: 'cannot add yourself'});
+                }
+                UserConnections.findOne({username: req.user.username})
+                                .then(currentUser => {
+                                    if(currentUser){
+                                        
+                                        let existingList = currentUser.connectionList;
+                                        // console.log(existingList.length)
+
+                                        for(let i=0; i<existingList.length; i++){
+                                            if(existingList[i].connectionid == getUser.username){
+                                                return res.json({status: 'fail', msg: 'connection already exists in list'});
+                                            }
+                                        }
+
+                                        currentUser.connectionList.push({ connectionname: getUser.name, connectionid: getUser.username, isroom: false});
+
+                                        currentUser.save()
+                                            .then((connection) => {
+                                                // console.log(connection);
+                                                return res.json({status: 'success', msg: 'connection added to existing list'});
+                                            })
+                                            .catch((err) => {
+                                                console.log('Error while adding connection to existing list: '+err)
+                                                return res.json({status: 'fail', msg: 'connection not added to existing list'});
+                                            })
+                                    }else{
+                                        // console.log('before')
+                                        const newList = [{
+                                            connectionname: getUser.name,
+                                            connectionid: getUser.username,
+                                            isroom: false
+                                        }]
+                                        // console.log('after')
+                                        const newConnection = new UserConnections({
+                                            username: req.user.username,
+                                            connectionList: newList
+                                        });
+                                        newConnection.save()
+                                            .then((connection) => {
+                                                // console.log(connection);
+                                                return res.json({status: 'success', msg: 'connection added'});
+                                            })
+                                            .catch((err) => {
+                                                console.log('Error while adding connection: '+err)
+                                                return res.json({status: 'fail', msg: 'connection not added'});
+                                            })
+
+                                    }
+                                })
+                                .catch(err => {
+                                    console.log('error while finding currentUser: '+err);
+                                    return res.json({status: 'fail', msg: 'error while finding currentUser'})
+                                });
+            })
+            .catch(err => {
+                console.log('error while finding getUser: '+err);
+                return res.json({status: 'fail', msg: 'error while finding getUser'})
+            });
+    }
+    else{
+        res.json({status: 'fail', msg: 'not authenticated to add user'});
+    }
+});
+
+app.post('/getroommessages', (req, res, next)=>{
+    if(req.isAuthenticated()){
+       const roomid = req.body.roomid;
+       RoomMessages.findOne({roomid: roomid})
+                   .then(roomMessages => {
+                       if(roomMessages){
+                           return res.json({status: 'success', msg: 'room messages found', messages: roomMessages.messages})
+                        }
+                        else{
+                            return res.json({status: 'fail', msg: 'no messages found'})
+                        }
+                    })
+                    .catch(err => {
+                        console.log('error while finding room messages: '+err);
+                        return res.json({status: 'fail', msg: 'error while finding room messages'})
+                    })
+                     
+    }else{
+        res.json({status: 'fail', msg: 'not authenticated to get room messages'});
+    }
+})
+app.post('/roommessages', (req, res, next)=>{
+    if(req.isAuthenticated()){
+        
+        // first find the room
+        Rooms.findOne({ roomid: req.body.roomid })
+             .then(room => {
+
+                // then store the messages to the server
+                RoomMessages.findOne({ roomid: room.roomid, roomname: room.roomname })
+                            .then(roomMessage => {
+                                if(roomMessage){
+                                    // if messages exist previously
+                                    roomMessage.messages.push({
+                                        message: req.body.message,           
+                                        sentBy: req.body.username,
+                                        sentByName: req.body.name
+                                    });
+                                    roomMessage.save()
+                                               .then((message) => {
+                                                    // console.log(message);
+                                                    return res.json({status: 'success', msg: 'message saved to existing room'})
+                                               })
+                                               .catch(err => {
+                                                    console.log('error while saving message to existing room: '+err);
+                                                    return res.json({status: 'fail', msg: 'error while saving message to existing room'})
+                                               })
+                                }else{
+                                    // if there are no messages in that room
+                                    const newRoomMessage = new RoomMessages({
+                                        roomid: room.roomid,
+                                        roomname: room.roomname,
+                                        messages: [{
+                                            message: req.body.message, 
+                                            sentBy: req.body.username,
+                                            sentByName: req.body.name
+                                        }]
+                                    });
+                                    newRoomMessage.save()
+                                                  .then((message) => {
+                                                        // console.log(message);
+                                                        return res.json({status: 'success', msg: 'message saved to new room'})
+                                                  })
+                                                  .catch(err => {
+                                                        console.log('error while saving message to new room: '+err);
+                                                        return res.json({status: 'fail', msg: 'error while saving message to new room'})
+                                                    })
+                                }
+                            })
+                            .catch(err => {
+                                console.log('error while finding roomMessage: '+err);
+                                return res.json({status: 'fail', msg: 'error while finding roomMessage'})
+                            })
+             })
+             .catch(err => {
+                console.log('error while finding room: '+err);
+                res.json({status: 'fail', msg: 'error while finding room'})
+             })
+    }else{
+        res.json({status: 'fail', msg: 'not authenticated to save messages to room'});
+    }
+})
+
 
 app.get('/fail',  (req, res, next)=>{
     if(req.isAuthenticated()){
@@ -251,9 +415,22 @@ app.get('*', (req, res)=>{
 // socket based operations
 
 io.on('connection', (socket) => {
-    console.log('Connected...')
+    console.log('New User Connected: '+socket.id)
+    // console.log('User: '+socket.userId)
+    socket.on('setUser', (user) =>{
+        socket.userId = user;
+        // next();
+        console.log('User: '+socket.userId)
+    })
+    socket.on('join', (room) => {
+        socket.join(room);
+        console.log('User: '+socket.userId+' joined room: '+room)
+    })
     socket.on('message', (msg) => {
         socket.broadcast.emit('message', msg)
+    })
+    socket.on('disconnect', (socket) => {
+        console.log('User Disconnected: '+ socket.id)
     })
 })
 

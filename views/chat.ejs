@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome | <%= locals.username %></title>
+    <title>Welcome | <%= locals.name %></title>
 </head>
 <body>
-    <h1>Chat Page, <%= locals.username %></h1>
+    <h1>Chat Page, <%= locals.name %></h1>
 </body>
 </html> -->
 
@@ -21,35 +21,59 @@
     <link rel="stylesheet" href="./public/chat.css">
     <script src="/socket.io/socket.io.js"></script>
     <script src="./public/chat.js" async></script>
-    <title>Welcome | <%= locals.username %></title>
+    <title>Welcome | <%= locals.name %></title>
 </head>
 <body>
+    <p id="currentuser" hidden><%= locals.username %></p>
     <div id="wrapper">
         <section class="connections__section">
             <div class="brand extended">
                 <div class="logo_user">
                     <img height="40" src="./public/india.svg" alt="">
-                    <h1 class="username"><%= locals.username %></h1>
+                    <h1 class="username"><%= locals.name %></h1>
                 </div>
                 <div class="buttons">
-                    <button class="button">Join</button>
-                    <button class="button">Create</button>
-                    <button class="button">New User</button>
+                    <button class="button">Join / Create</button>
+                    <button data-modal-target class="adduserbutton button">Add User</button>
+                    <button class="button" id="logout">Log Out</button>
                 </div>
             </div>
-            <!-- <div class="connections__area">
-                <div class="connection" id="somethingunique">
-                    <span>
+            <div class="connections__area">
+                <!-- Displaying list of users/rooms with which user had chat previously -->
 
-                        ROHIT
-                    </span>
-                </div>
-            </div> -->
+                <ul>
+
+                    <!-- Global Chat (common to everyone) -->
+                    <li class="connection" id="chatapp1337">
+                        <span>
+                            Global
+                        </span>
+                    </li>
+                    
+                    <li class="connection" id="chatapp1337x">
+                        <span>
+                            Global 2nd
+                        </span>
+                    </li>
+
+
+
+                    <% for(let i = 0; i < locals.connectionList.length; i++){ %>
+                        <li class="connection" id="<%= locals.connectionList[i].connectionid %>"><span><%= locals.connectionList[i].connectionname %></span></li>
+                    <% } %>
+
+
+                </ul>
+
+
+
+                
+            </div>
         </section>
         <section class="chat__section">
             <div class="brand">
                 <img height="40" src="./public/india.svg" alt="">
-                <h1>INDOCHAT</h1>
+                <h1>CHATAPP1337</h1>
             </div>
             <div class="message__area"></div>
             <div>
@@ -57,5 +81,22 @@
             </div>
         </section>
     </div>
+
+    <div class="modal" id="">
+        <div class="modal-header">
+            <div class="title">Add User</div>
+            <button data-close-button class="close-button">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <form action="">
+                <label for="username" >Enter the UserName:</label>
+                <input type="text" name="username" id="addusername">
+                <button type="submit" id="addsendbutton">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
 </body>
 </html>
