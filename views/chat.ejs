@@ -1,0 +1,61 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | <%= locals.username %></title>
+</head>
+<body>
+    <h1>Chat Page, <%= locals.username %></h1>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./public/chat.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./public/chat.js" async></script>
+    <title>Welcome | <%= locals.username %></title>
+</head>
+<body>
+    <div id="wrapper">
+        <section class="connections__section">
+            <div class="brand extended">
+                <div class="logo_user">
+                    <img height="40" src="./public/india.svg" alt="">
+                    <h1 class="username"><%= locals.username %></h1>
+                </div>
+                <div class="buttons">
+                    <button class="button">Join</button>
+                    <button class="button">Create</button>
+                    <button class="button">New User</button>
+                </div>
+            </div>
+            <!-- <div class="connections__area">
+                <div class="connection" id="somethingunique">
+                    <span>
+
+                        ROHIT
+                    </span>
+                </div>
+            </div> -->
+        </section>
+        <section class="chat__section">
+            <div class="brand">
+                <img height="40" src="./public/india.svg" alt="">
+                <h1>INDOCHAT</h1>
+            </div>
+            <div class="message__area"></div>
+            <div>
+                <textarea id="textarea" cols="30" rows="1" placeholder="Write a message..."></textarea>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

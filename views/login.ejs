@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="./public/india.svg">
+    <title>Login</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+    *,
+    *::before,
+    *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-weight: bold;
+        font-family: 'Itim', cursive;
+        color: rgb(35, 61, 62);
+    }
+    body {
+        background-color: rgb(214, 235, 236);
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        max-width: 500px;
+        height: 50vh;
+        margin: 10vh auto 0 auto;
+    }
+    .container h1 {
+        text-align: center;
+        color: rgb(55, 97, 99);
+        margin: 5px;
+    }
+    form {
+        width: 33vw;
+        height: 50vh;
+        background-color: rgb(229, 235, 235);
+        padding: 30px;
+        border: 2px solid rgb(35, 61, 62);
+        border-radius: 8px;
+    }
+    form .input-group {
+        margin-bottom: 15px;
+    }
+    form label {
+        display: block;
+        margin-bottom: 10px;
+    }
+    form input {
+        padding: 12px 20px;
+        width: 100%;
+        border: 1px solid #ccc;
+    }
+    .submit-btn {
+        width: 100%;
+        border: none;
+        background: rgb(55, 97, 99);
+        font-size: 20px;
+        color: white;
+        border-radius: 3px;
+        padding: 20px;
+        text-align: center;
+        margin: 10px 0;
+    }
+    .submit-btn:hover{
+        transform: scale(1.01);
+        background: rgb(93, 163, 167);
+        font-size: 22px;
+        color:bisque;
+        transition: all 200ms;
+    }
+
+    @media only screen and (max-width: 848px){
+        .container{
+            height: 400px;
+        }
+
+        form{
+            width: 300px;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .download-btn, .submit-btn{
+            width: 225px;
+        }      
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Please LOGIN</h1>
+        <form action="/login" method="post">
+            <label for="username">Enter username</label>
+            <input type="username" name="username" id="username">
+            <label for="password">Enter password</label>
+            <input type="password" name="password" id="password">
+            <button class="submit-btn" id="submit">Submit</button>
+            <div>Not Registered?</div>
+            <button class="submit-btn" id="register">Register Here</button>
+        </form>
+    </div>
+
+
+    <script>
+        document.getElementById('register').addEventListener('click', (e)=>{
+            e.preventDefault();
+            location.href = '/register';
+        })
+    </script>
+</body>
+</html>
