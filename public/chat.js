@@ -33,7 +33,8 @@ function sendMessage(message) {
     //     message: message.trim()
     // }
     // Append 
-    appendMessage(message, nameOfUser, 'outgoing')
+    const time = new Date();
+    appendMessage(message, nameOfUser, 'outgoing', time.toLocaleString('en-IN', {'dateStyle': 'short', 'timeStyle': 'medium'}));
     textarea.value = ''
     scrollToBottom()
 
@@ -61,13 +62,13 @@ function sendMessage(message) {
 
 }
 
-function appendMessage(message, user, type) {
+function appendMessage(message, user, type, timeStamp) {
     let mainDiv = document.createElement('div')
     let classnameOfUser = type
     mainDiv.classList.add(classnameOfUser, 'message')
 
     let markup = `
-        <h4>${user}</h4>
+        <h4>${user} &nbsp; | &nbsp; <span>${timeStamp}</span></h4>
         <p>${message}</p>
     `
     mainDiv.innerHTML = markup
@@ -146,7 +147,7 @@ function scrollToBottom() {
         .then(res => {
             console.log(res);
             closeModalButton.click()
-            
+            location.reload();
         })
         .catch(err => {
             console.log(err);
@@ -222,7 +223,8 @@ function scrollToBottom() {
         .then(res => res.json())
         .then(res => {
             // console.log(res);
-            closeModalButton.click()
+            closeModalButton.click();
+            location.reload();
         })
         .catch(err => {
             console.log(err);
@@ -308,12 +310,15 @@ function removeActiveFilter(){
 
                             const messageList = res.messages.sort((a, b) => a.createdAt - b.createdAt);
                             messageList.forEach(message => {
+                                let sentAt = new Date(message.sentAt);
+                                sentAt = sentAt.toLocaleString('en-IN', {'dateStyle': 'short', 'timeStyle': 'medium'});
                                 if(message.sentBy == currentUser){
-                                    appendMessage(message.message, message.sentByName, 'outgoing');
+                                    appendMessage(message.message, message.sentByName, 'outgoing', sentAt);
                                 }else{
-                                    appendMessage(message.message, message.sentByName, 'incoming');
+                                    appendMessage(message.message, message.sentByName, 'incoming', sentAt);
                                 }
                             })
+                            scrollToBottom();
                             console.log('done')
                         }
                     })
