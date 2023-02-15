@@ -4,7 +4,10 @@ const currentUser = document.getElementById('currentuser').innerText
 socket.emit('setUser', currentUser);
 
 
-let currentRoom = 'chatapp1337';
+let currentRoom = {
+    'name': 'chatapp1337',
+    'isroom': true
+};
 
 let currentRoomList = [];
 
@@ -35,15 +38,26 @@ function sendMessage(message) {
     scrollToBottom()
 
     // Send to server 
-    socket.emit('message', {message, user: nameOfUser, room: currentRoom})
+    console.log('current room: '+currentRoom);
+    socket.emit('message', {message, user: nameOfUser, room: currentRoom.name, isroom: currentRoom.isroom})
 
 
     // furthermore save the messages to server
-    saveMessages({
-        message,
-        sentBy: currentUser,
-        sentTo: currentRoom,
-    })
+    if(currentRoom.isroom){
+        console.log('saving room message')
+        saveMessages({
+            message,
+            sentBy: currentUser,
+            sentTo: currentRoom,
+        })
+    }else{
+        console.log('saving private message')
+        savePrivateMessages({
+            message,
+            sentBy: currentUser,
+            sentTo: currentRoom.name,
+        })
+    }
 
 }
 
@@ -130,7 +144,7 @@ function scrollToBottom() {
         })
         .then(res => res.json())
         .then(res => {
-            // console.log(res);
+            console.log(res);
             closeModalButton.click()
             
         })
@@ -218,7 +232,7 @@ function scrollToBottom() {
 // remove active filter
 function removeActiveFilter(){
     const chatList = Array.from(document.getElementsByTagName('li'));
-    console.log(chatList);
+    // console.log(chatList);
     chatList.forEach(chat => {
         if(chat.hasAttribute('active'))
             chat.removeAttribute('active');
@@ -230,21 +244,29 @@ function removeActiveFilter(){
     const buttonToJoinRoom = Array.from(document.getElementsByClassName('connection'));
     // console.log(buttonToJoinRoom)
     buttonToJoinRoom.forEach(button => {
-        if(button.getAttribute('id') && button.innerText.indexOf('(G)')>=0){
-            console.log(button.getAttribute('id') + ' joined...')
+        if(button.getAttribute('id')){
             currentRoomList.push(button.getAttribute('id'));
             socket.emit('join', `${button.getAttribute('id')}`);
+            console.log(button.getAttribute('id') + ' joined...')
         }
     })
     buttonToJoinRoom.forEach(button => { 
-        if(!(button.innerText.indexOf('(G)')>=0)) return;
+        // if(!(button.innerText.indexOf('(G)')>=0)) return;
         return button.addEventListener('click', (e)=>{
                     e.preventDefault();
                     
                     const roomId = button.getAttribute('id');
 
-                    currentRoom = roomId;
                     console.log('getting messages for room: ' + roomId);
+                    if(button.innerText.indexOf('(G)')>=0){
+                        currentRoom.name = roomId;
+                        currentRoom.isroom = true;
+                    }else{
+                        currentRoom.name = roomId;
+                        currentRoom.isroom = false;
+                    }
+                    // console.log('roomID: ' + roomId)
+                    // console.log(currentRoom)
 
 
                     fetch('/getroommessages', {
@@ -271,8 +293,8 @@ function removeActiveFilter(){
                         // remove active filter from all chats
                         removeActiveFilter();
                         button.setAttribute('active', '');
-                        console.log(button.getAttribute('name'))
-                        console.log(button.innerText.indexOf('(G)'))
+                        // console.log(button.getAttribute('name'))
+                        // console.log(button.innerText.indexOf('(G)'))
 
 
 
@@ -302,15 +324,50 @@ function removeActiveFilter(){
     });    
 })();
 
-// console.log('current room: ', currentRoom)
-// save messages for a particular room
+
+// save messages for a particular group chat
 function saveMessages(data){
     // console.log(data);
     const message = data.message;
     const username = data.sentBy;
     const roomid = data.sentTo;
 
-    fetch('/roommessages', {
+    fetch('/saveroommessages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message,
+            name: nameOfUser,
+            username,
+            roomid,
+        })
+    })
+    .then(res => {
+        // console.log(res);
+        return res.json();
+    })
+    .then(res => {
+        console.log(res);
+    })
+    .catch(err => {
+        console.log(err);
+    })
+}
+
+// save messages for a particular private chat
+function savePrivateMessages(data){
+    // console.log(data);
+    const message = data.message;
+    const username = data.sentBy;
+    const roomid = data.sentTo;
+    console.log('saving private messages')
+    console.log(message)
+    console.log(username)
+    console.log(roomid)
+
+    fetch('/saveprivateroommessages', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
