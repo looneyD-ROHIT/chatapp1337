@@ -48,7 +48,7 @@ function sendMessage(message) {
         saveMessages({
             message,
             sentBy: currentUser,
-            sentTo: currentRoom,
+            sentTo: currentRoom.name,
         })
     }else{
         console.log('saving private message')
@@ -201,6 +201,8 @@ function scrollToBottom() {
 
     const roomname = document.getElementById('roomname');
     const roomid = document.getElementById('roomid');
+
+    console.log(roomname.value, roomid.value)
 
     roomSendButton.addEventListener('click', (e)=>{
         e.preventDefault();

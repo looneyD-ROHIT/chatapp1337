@@ -611,6 +611,7 @@ app.post('/saveroommessages', (req, res, next)=>{
     if(req.isAuthenticated()){
         
         // first find the room
+        console.log(req.body)
         Rooms.findOne({ roomid: req.body.roomid })
              .then(room => {
 
