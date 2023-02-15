@@ -14,11 +14,27 @@ body {
     background: #F8F8F8;
     font-family: 'Roboto', sans-serif;
 }
+
+
 section.chat__section {
-    width: 65vw;
+    width: 64vw;
     max-width: 90%;
     background: #fff;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.chat__section__overlay{
+    position: absolute;
+    top: 0;
+    right:0;
+    bottom: 0;
+    width: 64vw;
+    z-index: 5;
+    background: white;
+}
+.chat__section__overlay[inactive]{
+    /* opacity: 0; */
+    z-index: -1;
 }
 .brand {
     padding: 20px;
@@ -89,6 +105,7 @@ textarea {
 #wrapper{
     width: 100vw;
     height: 100vh;
+    position: relative;
     display: flex;
     border: 2px solid #8F8BE8;
     /* justify-content: space-between; */
@@ -121,7 +138,7 @@ section.connections__section{
     background: rgb(116, 116, 157);
     color: rgb(228, 228, 239);
     cursor: pointer;
-    transition: all 1s;
+    transition: all 0.5s;
     
 }
 
@@ -203,11 +220,22 @@ li[active]{
     border: 1px solid rgb(35, 61, 62);
     border-radius: 10px;
     z-index: 100;
-    width: 35vw;
-    height: 10vh;
+    width: 500px;
+    height: 200px;
     max-width: 80%;
     /* background-color: rgb(205, 234, 236); */
     background-color: #95bbf3;
+}
+
+.modal2{
+    /* height: 350px; */
+}
+.modal2 form{
+    height: 200px;
+}
+
+.modal2 form input{
+    margin-bottom: 5px;
 }
 
 .modal.active{
@@ -241,7 +269,7 @@ li[active]{
 .modal-body{
     padding: 15px 15px 0 15px;
     font-size: 1.25rem;
-    height: 20vh;
+    height: 225px;
     /* background-color: rgb(205, 234, 236); */
     background-color: #b6cef3;
 }
@@ -295,9 +323,12 @@ form button:hover{
 }
 
 .overlay.active{
+    z-index: 50;
     opacity: 1;
     pointer-events: all;
 }
+
+
 
 
 @media (min-width: 768px) {

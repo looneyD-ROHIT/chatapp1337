@@ -6,6 +6,8 @@ socket.emit('setUser', currentUser);
 
 let currentRoom = 'chatapp1337';
 
+let currentRoomList = [];
+
 const nameOfUser = document.querySelector('.username').innerText;
 
 const textarea = document.querySelector('#textarea')
@@ -33,7 +35,7 @@ function sendMessage(message) {
     scrollToBottom()
 
     // Send to server 
-    socket.emit('message', {message, user: nameOfUser})
+    socket.emit('message', {message, user: nameOfUser, room: currentRoom})
 
 
     // furthermore save the messages to server
@@ -68,14 +70,14 @@ function scrollToBottom() {
     messageArea.scrollTop = messageArea.scrollHeight
 }
 
-// adding user to the chatroom for a specific user
-(function addingUserToChat(){
+// adding specific user to the chat with another user
+(function addingUserToPrivateChat(){
 
     const addUserButton = document.querySelector('.adduserbutton');
     addUserButton.addEventListener('click', (e)=>{
         e.preventDefault();
         const modal = document.querySelector(`.modal`);
-        console.log(modal);
+        // console.log(modal);
         // console.log(`${button.dataset.modalTarget}`);
         openModal(modal);
 
@@ -128,7 +130,7 @@ function scrollToBottom() {
         })
         .then(res => res.json())
         .then(res => {
-            console.log(res);
+            // console.log(res);
             closeModalButton.click()
             
         })
@@ -139,64 +141,165 @@ function scrollToBottom() {
 
 })();
 
-// connecting to a specific room
-(function connectingRoom(){
-    const buttonToJoinRoom = Array.from(document.getElementsByClassName('connection'));
-    // console.log(buttonToJoinRoom)
-    buttonToJoinRoom.forEach(button => button.addEventListener('click', (e)=>{
+// adding specific user to chat in a room
+(function addingRoomToUser(){
+
+    const addRoomButton = document.querySelector('#joinorcreate');
+    addRoomButton.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const modal = document.querySelector(`.modal2`);
+        // console.log(modal);
+        // console.log(`${button.dataset.modalTarget}`);
+        openModal(modal);
+
+    })
+
+    const closeModalButton = document.querySelector('.close-button2');
+
+    closeModalButton.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const modal = document.querySelector(`.modal2`);
+        closeModal(modal);
+    })
+
+    const overlay = document.getElementById('overlay');
+
+    overlay.addEventListener('click', (e)=>{
+        const modals = document.querySelectorAll('.modal.active');
+        modals.forEach(modal => {
+            closeModal(modal);
+        })
+    })
+
+    function openModal(modal){
+        if(!modal) return;
+        modal.classList.add('active');
+        overlay.classList.add('active');
+    }
+
+    function closeModal(modal){
+        if(!modal) return;
+        modal.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+
+    const roomSendButton = document.getElementById('roomsendbutton');
+
+    const roomname = document.getElementById('roomname');
+    const roomid = document.getElementById('roomid');
+
+    roomSendButton.addEventListener('click', (e)=>{
         e.preventDefault();
 
 
-        // apply appropriate css to chat selected
-        const chatList = Array.from(document.getElementsByTagName('li'));
-        chatList.forEach(chat => {
-            if(chat == e.target){
-                chat.setAttribute('active', '');
-            }else{
-                chat.removeAttribute('active');
-            }
-        });
-
-        messageArea.innerHTML = '';
         
-        const roomId = button.getAttribute('id');
-        // console.log(roomName);
-
-
-        // joining the specific room
-        currentRoom = roomId;
-        // console.log('current room: ', currentRoom)
-        socket.emit('join', `${roomId}`);
-        
-        // fetch the messages sent previously
-
-        fetch('/getroommessages', {
+        fetch('/addroom',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                roomid: roomId
+                roomname: roomname.value,
+                roomid: roomid.value
             })
         })
         .then(res => res.json())
         .then(res => {
-            console.log(res);
-            if(res.status!='success') return;
-            const messageList = res.messages.sort((a, b) => a.createdAt - b.createdAt);
-            messageList.forEach(message => {
-                if(message.sentBy == currentUser){
-                    appendMessage(message.message, message.sentByName, 'outgoing');
-                }else{
-                    appendMessage(message.message, message.sentByName, 'incoming');
-                }
-            })
+            // console.log(res);
+            closeModalButton.click()
         })
         .catch(err => {
             console.log(err);
         })
-        
-    }));    
+    })
+})();
+
+
+// remove active filter
+function removeActiveFilter(){
+    const chatList = Array.from(document.getElementsByTagName('li'));
+    console.log(chatList);
+    chatList.forEach(chat => {
+        if(chat.hasAttribute('active'))
+            chat.removeAttribute('active');
+    });
+}
+
+// connecting to a specific room
+(function connectingRoom(){
+    const buttonToJoinRoom = Array.from(document.getElementsByClassName('connection'));
+    // console.log(buttonToJoinRoom)
+    buttonToJoinRoom.forEach(button => {
+        if(button.getAttribute('id') && button.innerText.indexOf('(G)')>=0){
+            console.log(button.getAttribute('id') + ' joined...')
+            currentRoomList.push(button.getAttribute('id'));
+            socket.emit('join', `${button.getAttribute('id')}`);
+        }
+    })
+    buttonToJoinRoom.forEach(button => { 
+        if(!(button.innerText.indexOf('(G)')>=0)) return;
+        return button.addEventListener('click', (e)=>{
+                    e.preventDefault();
+                    
+                    const roomId = button.getAttribute('id');
+
+                    currentRoom = roomId;
+                    console.log('getting messages for room: ' + roomId);
+
+
+                    fetch('/getroommessages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            roomid: roomId
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        console.log(res);
+
+
+                        // apply appropriate css to chat selected
+                        const chatheading = document.querySelector('#chatheading');
+                        const overlayoverall = document.querySelector('#overlayoverall');
+                        chatheading.innerText = button.getAttribute('name');
+                        overlayoverall.setAttribute('inactive', '');
+
+
+                        // remove active filter from all chats
+                        removeActiveFilter();
+                        button.setAttribute('active', '');
+                        console.log(button.getAttribute('name'))
+                        console.log(button.innerText.indexOf('(G)'))
+
+
+
+                        messageArea.innerHTML = '';
+
+                        if(res.status!='success'){
+                            return;
+                        }else{
+
+                            const messageList = res.messages.sort((a, b) => a.createdAt - b.createdAt);
+                            messageList.forEach(message => {
+                                if(message.sentBy == currentUser){
+                                    appendMessage(message.message, message.sentByName, 'outgoing');
+                                }else{
+                                    appendMessage(message.message, message.sentByName, 'incoming');
+                                }
+                            })
+                            console.log('done')
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
+                    
+                })
+    
+    });    
 })();
 
 // console.log('current room: ', currentRoom)

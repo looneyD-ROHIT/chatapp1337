@@ -33,7 +33,7 @@
                     <h1 class="username"><%= locals.name %></h1>
                 </div>
                 <div class="buttons">
-                    <button class="button">Join / Create</button>
+                    <button class="button" id="joinorcreate">Join / Create</button>
                     <button data-modal-target class="adduserbutton button">Add User</button>
                     <button class="button" id="logout">Log Out</button>
                 </div>
@@ -44,22 +44,24 @@
                 <ul>
 
                     <!-- Global Chat (common to everyone) -->
-                    <li class="connection" id="chatapp1337">
+                    <!-- <li class="connection" name="chatapp1337" id="chatapp1337">
                         <span>
-                            Global
+                            (G) Global
                         </span>
-                    </li>
-                    
-                    <li class="connection" id="chatapp1337x">
-                        <span>
-                            Global 2nd
-                        </span>
-                    </li>
-
-
+                    </li> -->
 
                     <% for(let i = 0; i < locals.connectionList.length; i++){ %>
-                        <li class="connection" id="<%= locals.connectionList[i].connectionid %>"><span><%= locals.connectionList[i].connectionname %></span></li>
+                        <li class="connection" name="<%= locals.connectionList[i].connectionname %>" id="<%= locals.connectionList[i].connectionid %>">
+                            <span>
+
+                                <% if(locals.connectionList[i].isroom){ %>
+                                    <span>(G) &nbsp;</span> <%=locals.connectionList[i].connectionname%>
+                                    <% } else{ %>  
+                                    <span>(U) &nbsp;</span> <%=locals.connectionList[i].connectionname%>
+                                <% } %>
+                                
+                            </span>
+                        </li>
                     <% } %>
 
 
@@ -70,16 +72,28 @@
                 
             </div>
         </section>
+
         <section class="chat__section">
             <div class="brand">
                 <img height="40" src="./public/india.svg" alt="">
-                <h1>CHATAPP1337</h1>
+                <h1 id="chatheading">
+
+                    CHATAPP1337
+
+                </h1>
             </div>
             <div class="message__area"></div>
             <div>
                 <textarea id="textarea" cols="30" rows="1" placeholder="Write a message..."></textarea>
             </div>
         </section>
+
+        <div class="chat__section__overlay" id="overlayoverall">
+            <div class="brand">
+                <img height="40" src="./public/india.svg" alt="">
+                <h1>CHATAPP1337</h1>
+            </div>
+        </div>
     </div>
 
     <div class="modal" id="">
@@ -97,6 +111,25 @@
         </div>
     </div>
 
+    <div class="modal modal2" id="">
+        <div class="modal-header">
+            <div class="title">Enter Room Details</div>
+            <button data-close-button class="close-button close-button2">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <form action="">
+                <label for="roomname" >Enter the RoomName:</label>
+                <input type="text" name="roomname" id="roomname">
+                <label for="roomid" >Enter the RoomId:</label>
+                <input type="text" name="roomid" id="roomid">
+                <button type="submit" id="roomsendbutton">Send</button>
+            </form>
+        </div>
+    </div>
+
     <div class="overlay" id="overlay"></div>
+    
+
 </body>
 </html>

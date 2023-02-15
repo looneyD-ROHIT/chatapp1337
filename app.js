@@ -1,6 +1,8 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
+import { instrument } from '@socket.io/admin-ui';
+import { nanoid } from 'nanoid';
 import mongoose from 'mongoose';
 import path from 'path';
 import cors from 'cors';
@@ -24,8 +26,15 @@ const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
     cors: {
-        origin: '*',
+        origin: ["https://admin.socket.io"],
+        credentials: true,
     }
+});
+
+// admin page for socket.io
+instrument(io, {
+    auth: false,
+    mode: 'development'
 });
 
 
@@ -231,76 +240,287 @@ app.get('/chat', (req, res, next)=>{
     }
 })
 
+// adding a private chat for particular user
 app.post('/adduser', (req, res, next)=>{
     if(req.isAuthenticated()){
-        User.findOne({username: req.body.username})
-            .then(getUser => {
-                // user trying to add himself
-                if(req.user.username == getUser.username){
-                    return res.json({status: 'fail', msg: 'cannot add yourself'});
+
+        let uniqueId = nanoid();
+
+        // check if current user already has connection with other user
+        // TODO
+
+        User.findOne({username: req.user.username})
+            .then(currentUser => {
+                if(currentUser){
+                    // if current user exists, check for other user
+                    User.findOne({username: req.body.username})
+                        .then(otherUser =>{
+                            if(otherUser){
+                                // both user exists, add each to other's connection list 
+                                
+                                // check if both users are same
+                                if(currentUser.username == otherUser.username){
+                                    return res.json({status: 'fail', msg: 'cannot add self as connection'});
+                                }
+                                
+                                // first add other user to current user's list
+                                UserConnections.findOne({username: currentUser.username})
+                                               .then(currentConnection => {
+                                                    if(currentConnection){
+                                                        // current connection already has a existing list
+                                                        for(let i=0; i<currentConnection.connectionList.length; i++){
+                                                            if(currentConnection.connectionList[i].username == otherUser.username){
+                                                                // connection already exists
+                                                                console.log('connection already exists')
+                                                                return res.json({status: 'fail', msg: 'other connection already exists in current\'s list'});
+                                                            }
+                                                        }
+                                                        // other connection does not exist in current's list
+                                                        currentConnection.connectionList.push({
+                                                            connectionname: otherUser.name,
+                                                            connectionid: uniqueId,
+                                                            connectionusername: otherUser.username,
+                                                            isroom: false
+                                                        });
+
+                                                        currentConnection.save()
+                                                                         .then(response =>{
+                                                                            console.log(response);
+                                                                         })
+                                                                         .catch(err =>{
+                                                                            console.log(err);
+                                                                            return res.json({status: 'fail', msg: 'error while saving other connection to current\'s list'});
+                                                                         })
+                                                    }else{
+                                                        // current connection has no list
+                                                        const newConnection = new UserConnections({
+                                                            username: currentUser.username,
+                                                            connectionList: [{
+                                                                connectionname: otherUser.name,
+                                                                connectionid: uniqueId,
+                                                                connectionusername: otherUser.username,
+                                                                isroom: false
+                                                            }]
+                                                        });
+                                                        newConnection.save()
+                                                                     .then(response =>{
+                                                                        console.log(response);
+                                                                     })
+                                                                     .catch(err => {
+                                                                        console.log(err);
+                                                                        return res.json({status: 'fail', msg: 'error while creating other connection to current\'s list'});
+                                                                     })
+                                                    }
+                                               })
+                                               .catch(err => {
+                                                    console.log(err);
+                                                    return res.json({status: 'fail', msg: 'error while finding current connection'});
+                                               })
+                                
+                                // second add current user to other user's list
+                                UserConnections.findOne({username: otherUser.username})
+                                               .then(otherConnection => {
+                                                    if(otherConnection){
+                                                        // other connection already has a existing list
+                                                        for(let i=0; i<otherConnection.connectionList.length; i++){
+                                                            if(otherConnection.connectionList[i].username == currentUser.username){
+                                                                // connection already exists
+                                                                console.log('current connection already exists in other\'s list')
+                                                                return res.json({status: 'fail', msg: 'current connection already exists in other\'s list'});
+                                                            }
+                                                        }
+                                                        // other connection does not exist in current's list
+                                                        otherConnection.connectionList.push({
+                                                            connectionname: currentUser.name,
+                                                            connectionid: uniqueId,
+                                                            connectionusername: currentUser.username,
+                                                            isroom: false
+                                                        });
+
+                                                        otherConnection.save()
+                                                                         .then(response =>{
+                                                                            console.log(response);
+                                                                         })
+                                                                         .catch(err =>{
+                                                                            console.log(err);
+                                                                            return res.json({status: 'fail', msg: 'error while saving current connection to other\'s list'});
+                                                                         })
+                                                    }else{
+                                                        // current connection has no list
+                                                        const newConnection = new UserConnections({
+                                                            username: otherUser.username,
+                                                            connectionList: [{
+                                                                connectionname: currentUser.name,
+                                                                connectionid: uniqueId,
+                                                                connectionusername: currentUser.username,
+                                                                isroom: false
+                                                            }]
+                                                        });
+                                                        newConnection.save()
+                                                                     .then(response =>{
+                                                                        console.log(response);
+                                                                     })
+                                                                     .catch(err => {
+                                                                        console.log(err);
+                                                                        return res.json({status: 'fail', msg: 'error while creating current connection to other\'s list'});
+                                                                     })
+                                                    }
+                                               })
+                                               .catch(err => {
+                                                    console.log(err);
+                                                    return res.json({status: 'fail', msg: 'error while finding other connection'});
+                                               })
+
+                                return res.json({status: 'success', msg: 'connection added to each other\'s list'})
+
+                            }else{
+                                console.log('other user not found')
+                                return res.json({status: 'fail', msg: 'other user not found'});
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            return res.json({status: 'fail', msg: 'error while finding other user'});
+                        })
+
+                }else{
+                    console.log('current user not found')
+                    return res.json({status: 'fail', msg: 'current user not found'});
                 }
-                UserConnections.findOne({username: req.user.username})
-                                .then(currentUser => {
-                                    if(currentUser){
-                                        
-                                        let existingList = currentUser.connectionList;
-                                        // console.log(existingList.length)
 
-                                        for(let i=0; i<existingList.length; i++){
-                                            if(existingList[i].connectionid == getUser.username){
-                                                return res.json({status: 'fail', msg: 'connection already exists in list'});
-                                            }
-                                        }
-
-                                        currentUser.connectionList.push({ connectionname: getUser.name, connectionid: getUser.username, isroom: false});
-
-                                        currentUser.save()
-                                            .then((connection) => {
-                                                // console.log(connection);
-                                                return res.json({status: 'success', msg: 'connection added to existing list'});
-                                            })
-                                            .catch((err) => {
-                                                console.log('Error while adding connection to existing list: '+err)
-                                                return res.json({status: 'fail', msg: 'connection not added to existing list'});
-                                            })
-                                    }else{
-                                        // console.log('before')
-                                        const newList = [{
-                                            connectionname: getUser.name,
-                                            connectionid: getUser.username,
-                                            isroom: false
-                                        }]
-                                        // console.log('after')
-                                        const newConnection = new UserConnections({
-                                            username: req.user.username,
-                                            connectionList: newList
-                                        });
-                                        newConnection.save()
-                                            .then((connection) => {
-                                                // console.log(connection);
-                                                return res.json({status: 'success', msg: 'connection added'});
-                                            })
-                                            .catch((err) => {
-                                                console.log('Error while adding connection: '+err)
-                                                return res.json({status: 'fail', msg: 'connection not added'});
-                                            })
-
-                                    }
-                                })
-                                .catch(err => {
-                                    console.log('error while finding currentUser: '+err);
-                                    return res.json({status: 'fail', msg: 'error while finding currentUser'})
-                                });
             })
             .catch(err => {
-                console.log('error while finding getUser: '+err);
-                return res.json({status: 'fail', msg: 'error while finding getUser'})
-            });
+                console.log(err);
+                return res.json({status: 'fail', msg: 'error while finding current user'});
+            })
+
     }
     else{
         res.json({status: 'fail', msg: 'not authenticated to add user'});
     }
 });
+
+// adding a room for a particular user
+app.post('/addroom', (req, res, next)=>{
+    if(req.isAuthenticated()){
+        Rooms.findOne({roomname: req.body.roomname, roomid: req.body.roomid})
+             .then(getRoom => {
+                if(getRoom){
+                    // room already exists
+                    UserConnections.findOne({username: req.user.username})
+                                   .then(currentUser => {
+                                    if(currentUser){
+                                        // user already has a list of connections
+                                        for(let i=0; i<currentUser.connectionList.length; i++){
+                                            if(currentUser.connectionList[i].connectionid == getRoom.roomid){
+                                                return res.json({status: 'fail', msg: 'room already exists in users connection list'});
+                                            }
+                                        }
+                                        currentUser.connectionList.push({
+                                            connectionname: getRoom.roomname,
+                                            connectionid: getRoom.roomid,
+                                            isroom: true,
+                                            connectionusername: null,
+                                        })
+                                        currentUser.save()
+                                                   .then((connection) => {
+                                                    // console.log(connection);
+                                                    return res.json({status: 'success', msg: 'existing room added to existing user list'});
+                                                   })
+                                                   .catch((err) => {
+                                                    console.log('Error while adding room to existing list: '+err)
+                                                    return res.json({status: 'fail', msg: 'existing room not added to existing user list'});
+                                                   })
+                                    }else{
+                                        // user does not have a list of connections
+                                        const newUserConnection = new UserConnections({
+                                            username: req.user.username,
+                                            connectionList: [{
+                                                connectionname: getRoom.roomname,
+                                                connectionid: getRoom.roomid,
+                                                isroom: true
+                                            }]
+                                        });
+                                        newUserConnection.save()
+                                                         .then((connection) => {
+                                                            return res.json({status: 'success', msg: 'existing room added to new user list'})
+                                                         })
+                                                         .catch(err => {
+                                                            console.log('error while saving new room to existing list: '+err);
+                                                            return res.json({status: 'fail', msg: 'error while saving existing room to new user list'});
+                                                         })
+                                    }
+                                   })
+                                   .catch(err =>{
+                                    console.log('error while finding currentUser room already exists: '+err);
+                                    return res.json({status: 'fail', msg: 'error while finding currentUser room already exists'})
+                                   })
+                }else{
+                    // room does not exits --> create this room if possible
+                    const newRoom = new Rooms({
+                        roomname: req.body.roomname,
+                        roomid: req.body.roomid
+                    });
+                    newRoom.save()
+                           .then((room) => {
+                            // now room is created --> add this to user connections
+                            UserConnections.findOne({username: req.user.username})
+                                           .then(currentUser => {
+                                            if(currentUser){
+                                                // user already has a list of connections
+                                                currentUser.connectionList.push({
+                                                    connectionname: room.roomname,
+                                                    connectionid: room.roomid,
+                                                    isroom: true
+                                                })
+                                                currentUser.save()
+                                                           .then((connection) => {
+                                                            // console.log(connection);
+                                                            return res.json({status: 'success', msg: 'new room added to existing user list'});
+                                                           })
+                                                           .catch((err) => {
+                                                            console.log('Error while adding new room to existing list: '+err)
+                                                            return res.json({status: 'fail', msg: 'new room not added to existing user list'});
+                                                           })
+                                            }else{
+                                                // user does not have a list of connections
+                                                const newUserConnection = new UserConnections({
+                                                    username: req.user.username,
+                                                    connectionList: [{
+                                                        connectionname: getRoom.roomname,
+                                                        connectionid: getRoom.roomid,
+                                                        isroom: true
+                                                    }]
+                                                });
+                                                newUserConnection.save()
+                                                                 .then((connection) => {
+                                                                    return res.json({status: 'success', msg: 'new room added to new user list'})
+                                                                 })
+                                                                 .catch(err => {
+                                                                    console.log('error while saving new room to new list: '+err);
+                                                                    return res.json({status: 'fail', msg: 'error while saving new room to new user list'});
+                                                                 })
+                                            }
+                                           })
+                                           .catch(err=>{
+                                                  console.log('error while finding currentUser after saving room: '+err);
+                                                  return res.json({status: 'fail', msg: 'error while finding currentUser after saving room'})
+                                           })
+                           })
+                           .catch(err => {
+                                 console.log('error while creating room: '+err);
+                                 return res.json({status: 'fail', msg: 'error while creating room'})
+                           })
+                }
+             })
+             .catch(err => {
+                    console.log('error while finding getRoom: '+err);
+                    return res.json({status: 'fail', msg: 'error while finding getRoom'})
+             })
+    }else{
+        res.json({status: 'fail', msg: 'not authenticated to add room to user'});
+    }
+})
 
 app.post('/getroommessages', (req, res, next)=>{
     if(req.isAuthenticated()){
@@ -423,11 +643,14 @@ io.on('connection', (socket) => {
         console.log('User: '+socket.userId)
     })
     socket.on('join', (room) => {
+        console.log(room)
         socket.join(room);
+        // console.log(socket.id)
+        // console.log(socket.adapter.rooms)
         console.log('User: '+socket.userId+' joined room: '+room)
     })
-    socket.on('message', (msg) => {
-        socket.broadcast.emit('message', msg)
+    socket.on('message', (message) => {
+        socket.to(message.room).emit('message', message)
     })
     socket.on('disconnect', (socket) => {
         console.log('User Disconnected: '+ socket.id)
