@@ -76,13 +76,14 @@ textarea {
 .incoming {
     /* background: #8F8BE8; */
     background: rgb(98, 156, 244);
-    min-width: 150px;
+    min-width: 200px;
+    /* max-width: 45vw; */
     color: #fff;  
 }
 .outgoing {
     /* background: #e9eafd; */
-    min-width: 150px;
-    max-width: 45vw;
+    min-width: 200px;
+    /* max-width: 45vw; */
     background: #c1d2eb;
     color: #60616b;
     margin-left: auto;
@@ -105,6 +106,7 @@ textarea {
 .message span{
     position: absolute;
     /* left: 10px; */
+    width: 50px;
     font-size: 8px
 }
 

@@ -41,7 +41,7 @@
             <div class="connections__area">
                 <!-- Displaying list of users/rooms with which user had chat previously -->
 
-                <ul>
+                <ul id="connections">
 
                     <!-- Global Chat (common to everyone) -->
                     <!-- <li class="connection" name="chatapp1337" id="chatapp1337">
@@ -51,13 +51,13 @@
                     </li> -->
 
                     <% for(let i = 0; i < locals.connectionList.length; i++){ %>
-                        <li class="connection" name="<%= locals.connectionList[i].connectionname %>" id="<%= locals.connectionList[i].connectionid %>">
+                        <li class="connection" name="<%= locals.connectionList[i].connectionname %>"  id="<%= locals.connectionList[i].connectionid %>">
                             <span>
 
                                 <% if(locals.connectionList[i].isroom){ %>
                                     <span>(G) &nbsp;</span> <%=locals.connectionList[i].connectionname%>
                                     <% } else{ %>  
-                                    <span>(U) &nbsp;</span> <%=locals.connectionList[i].connectionname%>
+                                    <span style="color: red;" id="<%= locals.connectionList[i].connectionusername %>" >(U) &nbsp;</span> <%=locals.connectionList[i].connectionname%>
                                 <% } %>
                                 
                             </span>
@@ -133,5 +133,6 @@
 
 
     <script src="./public/chat.js" async></script>
+    <!-- <script type="text/javascript" src="src/purify.js"></script> -->
 </body>
 </html>

@@ -81,10 +81,18 @@ router.post('/register', (req, res, next) => {
 
 });
 
-router.get('/chat', isLoggedIn, (req, res, next)=>{
+router.get('/chat', isLoggedIn, async (req, res, next)=>{
     UserConnections.findOne({ username: req.user.username })
-        .then(response => {
-            return res.render('chat', {name: req.user.name, username: req.user.username, connectionList: response ? response.connectionList : []})
+        .then(async response => {
+            const connList = response ? response.connectionList : [];
+            // const userRes = await User.find();
+            // userRes.forEach(user => {
+            //     connList.push({
+
+            //     })
+            // })
+
+            return res.render('chat', {name: req.user.name, username: req.user.username, connectionList: connList})
         })
         .catch(err => {
             console.log(err);
@@ -324,7 +332,7 @@ router.post('/addroom', isLoggedIn, (req, res, next)=>{
                                         connectionname: getRoom.roomname,
                                         connectionid: getRoom.roomid,
                                         isroom: true,
-                                        connectionusername: null,
+                                        connectionusername: getRoom.roomid,
                                     })
                                     currentUser.save()
                                                 .then((connection) => {
@@ -342,7 +350,8 @@ router.post('/addroom', isLoggedIn, (req, res, next)=>{
                                         connectionList: [{
                                             connectionname: getRoom.roomname,
                                             connectionid: getRoom.roomid,
-                                            isroom: true
+                                            isroom: true,
+                                            connectionusername: getRoom.roomid
                                         }]
                                     });
                                     newUserConnection.save()
@@ -375,7 +384,8 @@ router.post('/addroom', isLoggedIn, (req, res, next)=>{
                                             currentUser.connectionList.push({
                                                 connectionname: room.roomname,
                                                 connectionid: room.roomid,
-                                                isroom: true
+                                                isroom: true,
+                                                connectionusername: room.roomid
                                             })
                                             currentUser.save()
                                                         .then((connection) => {
@@ -393,7 +403,8 @@ router.post('/addroom', isLoggedIn, (req, res, next)=>{
                                                 connectionList: [{
                                                     connectionname: getRoom.roomname,
                                                     connectionid: getRoom.roomid,
-                                                    isroom: true
+                                                    isroom: true,
+                                                    connectionusername: getRoom.roomid
                                                 }]
                                             });
                                             newUserConnection.save()

@@ -18,7 +18,7 @@ const messageArea = document.querySelector('.message__area')
 
 textarea.addEventListener('keyup', (e) => {
     if(e.key === 'Enter') {
-        sendMessage(e.target.value)
+        sendMessage(`${e.target.value}`)
     }
 })
 
@@ -40,7 +40,7 @@ function sendMessage(message) {
 
     // Send to server 
     console.log('current room: '+currentRoom);
-    socket.emit('message', {message, user: nameOfUser, room: currentRoom.name, isroom: currentRoom.isroom})
+    socket.emit('message', {message, user: nameOfUser, room: currentRoom.name, isroom: currentRoom.isroom, timeStamp: time.toLocaleString('en-IN', {'dateStyle': 'short', 'timeStyle': 'medium'})});
 
 
     // furthermore save the messages to server
@@ -67,9 +67,11 @@ function appendMessage(message, user, type, timeStamp) {
     let classnameOfUser = type
     mainDiv.classList.add(classnameOfUser, 'message')
 
+    let sanitizedMsg = encodeHTML(message);
+
     let markup = `
         <h4>${user} &nbsp; | &nbsp; <span>${timeStamp}</span></h4>
-        <p>${message}</p>
+        <p>${sanitizedMsg}</p>
     `
     mainDiv.innerHTML = markup
     messageArea.appendChild(mainDiv)
@@ -77,13 +79,18 @@ function appendMessage(message, user, type, timeStamp) {
 
 // Recieve messages 
 socket.on('message', (message) => {
-    appendMessage(message.message, message.user, 'incoming')
-    scrollToBottom()
+    appendMessage(message.message, message.user, 'incoming', message.timeStamp);
+    scrollToBottom();
 })
 
 function scrollToBottom() {
     messageArea.scrollTop = messageArea.scrollHeight
 }
+
+function encodeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
+
 
 // adding specific user to the chat with another user
 (function addingUserToPrivateChat(){
@@ -404,5 +411,27 @@ function savePrivateMessages(data){
     logoutButton.addEventListener('click', (e)=>{
         // e.preventDefault();
         location.href = '/logout';
+    })
+})();
+
+
+(async function onlineChecker(){
+    
+    setInterval(() => {
+        if(socket.connected){
+            // console.log(currentUser)
+            const data = {
+                username: currentUser,
+                isActive: true
+            }
+            socket.emit('online-status', data)
+        }
+    }, 1);
+    socket.on('online-status', (data)=>{
+        if(data.isActive)
+            document.getElementById(data.username).style.color = 'green'
+        else
+            document.getElementById(data.username).style.color = 'red'
+        // console.log(data)
     })
 })();

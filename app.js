@@ -13,6 +13,9 @@ import connection from './utilities/connection.js';
 
 const PORT = process.env.PORT || 1337;
 
+// const HOST = '0.0.0.0';
+const HOST = '127.0.0.1';
+
 // Create the Express application
 const app = express();
 
@@ -42,6 +45,7 @@ app.use(passport.authenticate('session'));
 
 // middlewares to be run only if user is authenticated
 app.use('/public', express.static(path.resolve(path.dirname('.'), 'public')));
+// app.use('/src', express.static(path.resolve(path.dirname('.'), 'src')));
 
 // routes
 app.use('/', router)
@@ -65,11 +69,13 @@ instrument(io, {
 // socket based operations
 io.on('connection', (socket) => {
     console.log('New User Connected: '+socket.id)
+    
+    
     // console.log('User: '+socket.userId)
     socket.on('setUser', (user) =>{
         socket.userId = user;
         // next();
-        console.log('User: '+socket.userId)
+        console.log('User: '+socket.userId);
     })
     socket.on('join', (room) => {
         console.log(room)
@@ -81,12 +87,22 @@ io.on('connection', (socket) => {
     socket.on('message', (message) => {
         socket.to(message.room).emit('message', message)
     })
-    socket.on('disconnect', (socket) => {
+    socket.on('disconnect', () => {
         console.log('User Disconnected: '+ socket.id)
+        const data = {
+            username: socket.userId,
+            isActive: false
+        }
+        socket.broadcast.emit('online-status', data)
+    })
+
+    
+    socket.on('online-status', (data)=>{
+        socket.broadcast.emit('online-status', data)
     })
 })
 
 // listen for requests
-httpServer.listen(PORT, ()=>{
+httpServer.listen(PORT, HOST, ()=>{
     console.log(`Running on http://localhost:${PORT}`);
 });
