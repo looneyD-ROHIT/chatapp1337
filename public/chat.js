@@ -50,6 +50,7 @@ function sendMessage(message) {
             message,
             sentBy: currentUser,
             sentTo: currentRoom.name,
+            sentAt: time
         })
     }else{
         console.log('saving private message')
@@ -57,6 +58,7 @@ function sendMessage(message) {
             message,
             sentBy: currentUser,
             sentTo: currentRoom.name,
+            sentAt: time
         })
     }
 
@@ -93,15 +95,85 @@ function encodeHTML(s) {
 
 
 // adding specific user to the chat with another user
-(function addingUserToPrivateChat(){
+(async function addingUserToPrivateChat(){
 
     const addUserButton = document.querySelector('.adduserbutton');
-    addUserButton.addEventListener('click', (e)=>{
+    addUserButton.addEventListener('click', async (e)=>{
         e.preventDefault();
         const modal = document.querySelector(`.modal`);
         // console.log(modal);
         // console.log(`${button.dataset.modalTarget}`);
         openModal(modal);
+
+        // get the list of users
+        try{
+            let list = await fetch('/users', {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                }
+            })
+            // list.json() is asynchronous so, we use await to make it synchronous
+            // JSON.parse parses the resultant json data
+            list = JSON.parse(await list.json())
+
+            // now inject the list of users in dom
+            const globalusersarea = document.getElementById('globalusersarea');
+            list = list.filter(user => user['username']!=currentUser).map(user => {
+
+                const adduserbox = document.createElement('div');
+                adduserbox.setAttribute('class', 'adduserbox')
+
+                const addusername = document.createElement('div');
+                addusername.setAttribute('class', 'addusername')
+                const span = document.createElement('span')
+                span.innerText = user['name'];
+                const addusernameid = document.createElement('span');
+                addusernameid.setAttribute('class', 'addusernameid')
+                addusernameid.innerText = user['username'];
+
+                addusername.appendChild(span)
+                addusername.appendChild(addusernameid)
+
+                const submitButton = document.createElement('button')
+                submitButton.setAttribute('type', 'submit')
+                submitButton.setAttribute('data-button-username', `${user['username']}`)
+                submitButton.setAttribute('class', `addsendbutton`)
+                submitButton.innerText = `Send`
+                submitButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    fetch('/adduser',{
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: user['username']
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        console.log(res);
+                        closeModalButton.click()
+                        location.reload();
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    })
+                })
+
+
+                adduserbox.appendChild(addusername)
+                adduserbox.appendChild(submitButton)
+
+                globalusersarea.appendChild(adduserbox)
+            })
+            // console.log(list);
+
+        }catch(err){
+            console.log(err);
+        }
 
     })
 
@@ -133,33 +205,34 @@ function encodeHTML(s) {
         modal.classList.remove('active');
         overlay.classList.remove('active');
     }
+    
 
-    const sendUserButton = document.getElementById('addsendbutton');
-    const sendUser = document.getElementById('addusername');
+    // const sendUserButton = document.getElementById('addsendbutton');
+    // const sendUser = document.getElementById('addusername');
 
-    sendUserButton.addEventListener('click', (e)=>{
-        e.preventDefault();
-        // console.log(sendUser.value)
-        // console.log(sendUser)
-        fetch('/adduser',{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: sendUser.value
-            })
-        })
-        .then(res => res.json())
-        .then(res => {
-            console.log(res);
-            closeModalButton.click()
-            location.reload();
-        })
-        .catch(err => {
-            console.log(err);
-        })
-    })
+    // sendUserButton.addEventListener('click', (e)=>{
+    //     e.preventDefault();
+    //     // console.log(sendUser.value)
+    //     // console.log(sendUser)
+    //     fetch('/adduser',{
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({
+    //             username: sendUser.value
+    //         })
+    //     })
+    //     .then(res => res.json())
+    //     .then(res => {
+    //         console.log(res);
+    //         closeModalButton.click()
+    //         location.reload();
+    //     })
+    //     .catch(err => {
+    //         console.log(err);
+    //     })
+    // })
 
 })();
 
@@ -345,6 +418,7 @@ function saveMessages(data){
     const message = data.message;
     const username = data.sentBy;
     const roomid = data.sentTo;
+    const time = data.sentAt;
 
     fetch('/saveroommessages', {
         method: 'POST',
@@ -356,6 +430,7 @@ function saveMessages(data){
             name: nameOfUser,
             username,
             roomid,
+            time
         })
     })
     .then(res => {
@@ -376,6 +451,7 @@ function savePrivateMessages(data){
     const message = data.message;
     const username = data.sentBy;
     const roomid = data.sentTo;
+    const time = data.sentAt;
     console.log('saving private messages')
     console.log(message)
     console.log(username)
@@ -391,6 +467,7 @@ function savePrivateMessages(data){
             name: nameOfUser,
             username,
             roomid,
+            time
         })
     })
     .then(res => {
@@ -426,12 +503,18 @@ function savePrivateMessages(data){
             }
             socket.emit('online-status', data)
         }
-    }, 1);
+    }, 500);
     socket.on('online-status', (data)=>{
-        if(data.isActive)
-            document.getElementById(data.username).style.color = 'green'
-        else
-            document.getElementById(data.username).style.color = 'red'
+        const user = document.getElementById(data.username);
         // console.log(data)
+        if(data.isActive){
+            if(user)
+                user.style.color = 'green'
+        }
+        else{
+            // console.log('inactive')
+            if(user)
+                user.style.color = 'red'
+        }
     })
 })();

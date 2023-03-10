@@ -465,7 +465,8 @@ router.post('/saveroommessages', isLoggedIn, (req, res, next)=>{
                                 roomMessage.messages.push({
                                     message: req.body.message,           
                                     sentBy: req.body.username,
-                                    sentByName: req.body.name
+                                    sentByName: req.body.name,
+                                    sentAt: req.body.time
                                 });
                                 roomMessage.save()
                                             .then((message) => {
@@ -484,7 +485,8 @@ router.post('/saveroommessages', isLoggedIn, (req, res, next)=>{
                                     messages: [{
                                         message: req.body.message, 
                                         sentBy: req.body.username,
-                                        sentByName: req.body.name
+                                        sentByName: req.body.name,
+                                        sentAt: req.body.time
                                     }]
                                 });
                                 newRoomMessage.save()
@@ -525,7 +527,8 @@ router.post('/saveprivateroommessages', isLoggedIn, (req, res, next)=>{
                         roomMessage.messages.push({
                             message: req.body.message,           
                             sentBy: req.body.username,
-                            sentByName: req.body.name
+                            sentByName: req.body.name,
+                            sentAt: req.body.time
                         });
                         roomMessage.save()
                                 .then((message) => {
@@ -544,7 +547,8 @@ router.post('/saveprivateroommessages', isLoggedIn, (req, res, next)=>{
                             messages: [{
                                 message: req.body.message, 
                                 sentBy: req.body.username,
-                                sentByName: req.body.name
+                                sentByName: req.body.name,
+                                sentAt: req.body.time
                             }]
                         });
                         newRoomMessage.save()
@@ -581,7 +585,8 @@ router.post('/saveprivateroommessages', isLoggedIn, (req, res, next)=>{
                                     roomMessage.messages.push({
                                         message: req.body.message,           
                                         sentBy: req.body.username,
-                                        sentByName: req.body.name
+                                        sentByName: req.body.name,
+                                        sentAt: req.body.time
                                     });
                                     roomMessage.save()
                                             .then((message) => {
@@ -600,7 +605,8 @@ router.post('/saveprivateroommessages', isLoggedIn, (req, res, next)=>{
                                         messages: [{
                                             message: req.body.message, 
                                             sentBy: req.body.username,
-                                            sentByName: req.body.name
+                                            sentByName: req.body.name,
+                                            sentAt: req.body.time
                                         }]
                                     });
                                     newRoomMessage.save()
@@ -634,6 +640,16 @@ router.post('/saveprivateroommessages', isLoggedIn, (req, res, next)=>{
             res.json({status: 'fail', msg: 'error while finding room'})
             })
 
+})
+
+router.post('/users', isLoggedIn, async (req, res, next) => {
+    try{
+        const list = await User.find()
+        res.json(JSON.stringify(list));
+    }catch(err){
+        console.log(err)
+        res.json({status: 'fail'})
+    }
 })
 
 router.get('/fail',  (req, res, next)=>{
